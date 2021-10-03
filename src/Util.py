@@ -9,10 +9,11 @@ def read_label(puzzleNumber):
     labels = json.load(label_file)['puzzleLabel']
     return labels
 
+
 def view_image(image):
     cv2.imshow("Image", image)
     cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
 
 
 class Util:
@@ -43,11 +44,16 @@ class Util:
             view_image(self.original)
 
     def process_image(self):
-        pass
+        self.board = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(self.board, (5, 5), 0)
+        # using adaptive thresh to account for variability in pictures:
+        # With a gaussian adaptive method, binary thresholding, 5 pixel groups
+        self.board = cv2.adaptiveThreshold(gray, 255, 1, 0, 13, 5)
+        if self.debug:
+            view_image(self.board)
 
     def get_cells(self):
         pass
 
     def get_board(self):
         pass
-
