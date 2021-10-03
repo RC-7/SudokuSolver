@@ -41,48 +41,48 @@ class Util:
         filename = "../data/Images/" + self.puzzle_name + ".jpg"
         original = cv2.imread(filename)
         self.original = cv2.resize(original, (700, 960), interpolation=cv2.INTER_AREA)
-        if self.debug:
-            view_image(self.original)
+        # if self.debug:
+        #     view_image(self.original)
 
     def process_image(self):
         self.board = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
         gray = cv2.GaussianBlur(self.board, (5, 5), 0)
         # using adaptive thresh to account for variability in pictures:
         # With a gaussian adaptive method, binary thresholding, 5 pixel groups
-        self.board = cv2.adaptiveThreshold(gray, 255, 1, 0, 13, 10)
+        self.board = cv2.adaptiveThreshold(gray, 255, 1, 0, 191, 0)
         if self.debug:
             view_image(self.board)
 
-    def get_cells(self):
-        # TODO get contour to see all squares
-        pass
-
     def get_board(self):
-        contours, hierarchy  = cv2.findContours(image=self.board, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_NONE)
-        max_area = 0
+        contours, hierarchy = cv2.findContours(image=self.board, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_NONE)
         # only look at top four contours, remove the outer most contour as it is most likely the image border
         top_contours = sorted(contours, key=cv2.contourArea, reverse=True)[1:5]
-        # for contour in top_contours:
-        #     perimeter = cv2.arcLength(contour, True)
-        #     # approximates the contour's shape
-        #     approx_shape = cv2.approxPolyDP(contour, 0.02 * perimeter, True)
-        #     if len(approx_shape) == 4:
-        #         area = cv2.contourArea(contour)
-        #         if area > max_area:
-        #             max_area = area
-        #             board_edge = contour
         board_edge = top_contours[0]
         self.contoursBoard = board_edge
-        self.board_area = max_area
+        self.board_area = cv2.contourArea(board_edge)
 
-        board_contour_index = contours.index(board_edge)
-        cells = []
-
-        for i in range(len(contours)):
-            if(hierarchy[0][i][3]) == board_contour_index:
-                cells.append((contours[i]))
+        x, y, w, h = cv2.boundingRect(board_edge)
+        max_x = x + w
+        max_y = y + h
+        for contour in contours:
+            try:
+                area = cv2.contourArea(contour)
+                if self.board_area / 20 > area > self.board_area / 250:
+                    m = cv2.moments(contour)
+                    cx = int(m['m10'] / m['m00'])
+                    cy = int(m['m01'] / m['m00'])
+                    area = cv2.contourArea(contour)
+                    if area < self.board_area and x <= cx <= max_x and y <= cy <= max_y:
+                        self.cells.append(contour)
+            except:
+                pass
 
         if self.debug:
-            img_copy = self.original.copy()
-            img_copy = cv2.drawContours(img_copy, cells, -1, (255, 255, 0), 3)
-            view_image(img_copy)
+            print(len(self.cells))
+            img_copy_cells = self.original.copy()
+            img_copy_board = self.original.copy()
+            img_copy_cells = cv2.drawContours(img_copy_cells, self.cells, -1, (255, 255, 0), 3)
+            img_copy_board = cv2.drawContours(img_copy_board, self.contoursBoard, -1, (255, 255, 0), 3)
+            # img_copy = cv2.putText(img_copy,"YES", (max_x, max_y), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 0, 0))
+            view_image(img_copy_cells)
+            view_image(img_copy_board)
