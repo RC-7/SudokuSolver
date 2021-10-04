@@ -93,16 +93,29 @@ class Util:
         if self.debug:
             view_image(self.board)
 
-    def get_cell_images(self, cellContour):
-        perimeter = cv2.arcLength(cellContour, True)
-        approx_poly = cv2.approxPolyDP(cellContour, 0.02 * perimeter, True)
+    # TODO
+    def order_cells(self):
+        pass
 
-        pts = np.array(approx_poly.reshape(4, 2))
-        # TODO look at using a less aggressively thresholded image for this
-        cell = four_point_transform(self.board, pts)
-        cell = cv2.resize(cell, (28, 28), interpolation=cv2.INTER_AREA)
-        view_image(cell)
-        return cell
+    def get_cell_images(self):
+        cell_images = []
+        for c in self.cells:
+            if self.debug:
+                img_copy_board = self.original.copy()
+                img_copy_board = cv2.drawContours(img_copy_board, c, -1, (255, 255, 0), 3)
+                view_image(img_copy_board)
+
+            perimeter = cv2.arcLength(c, True)
+            approx_poly = cv2.approxPolyDP(c, 0.08 * perimeter, True)
+
+            pts = np.array(approx_poly.reshape(4, 2))
+            # TODO look at using a less aggressively thresholded image for this
+            cell = four_point_transform(self.board, pts)
+            cell = cv2.resize(cell, (28, 28), interpolation=cv2.INTER_AREA)
+            cell_images.append(cell)
+            if self.debug:
+                view_image(cell)
+        return cell_images
 
     def get_contours(self):
         contours, hierarchy = cv2.findContours(image=self.board, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_NONE)
@@ -127,13 +140,6 @@ class Util:
                         self.cells.append(contour)
             except:
                 pass
-
-        # perimeter = cv2.arcLength(self.cells[0], True)
-        # approx_poly = cv2.approxPolyDP(self.cells[0], 0.02 * perimeter, True)
-        #
-        # pts = np.array(approx_poly.reshape(4, 2))
-        # self.board = four_point_transform(self.board, pts)
-        # view_image(self.board)
 
         if self.debug:
             print(len(self.cells))
