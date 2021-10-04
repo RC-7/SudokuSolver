@@ -16,8 +16,48 @@ def view_image(image):
     # cv2.destroyAllWindows()
 
 
+def order_points(pts):
+    rect = np.zeros((4, 2), dtype="float32")
+
+    s = pts.sum(axis=1)
+    rect[0] = pts[np.argmin(s)]
+    rect[2] = pts[np.argmax(s)]
+
+    diff = np.diff(pts, axis=1)
+    rect[1] = pts[np.argmin(diff)]
+    rect[3] = pts[np.argmax(diff)]
+    return rect
+
+
+def distance(pt1, pt2):
+    return np.sqrt(((pt1[0] - pt2[0]) ** 2) + ((pt1[1] - pt2[1]) ** 2))
+
+
+def four_point_transform(image, pts):
+    rect = order_points(pts)
+    (tl, tr, br, bl) = rect
+
+    width_bottom = distance(br, bl)
+    width_top = distance(tr, tl)
+    max_width = max(int(width_bottom), int(width_top))
+
+    height_right = distance(tr, br)
+    height_left = distance(tl, bl)
+    max_height = max(int(height_right), int(height_left))
+
+    dst = np.array([
+        [0, 0],
+        [max_width, 0],
+        [max_width, max_height],
+        [0, max_height]], dtype="float32")
+
+    m = cv2.getPerspectiveTransform(rect, dst)
+    warped = cv2.warpPerspective(image, m, (max_width, max_height))
+    return warped
+
+
 class Util:
-    def __init__(self, debug=False):
+    def __init__(self, debug, puzzle_name='Puzzle1'):
         self.contoursOriginal = []
         self.cells = []
         self.contoursBoard = []
@@ -26,7 +66,7 @@ class Util:
         self.labels = []
         self.board_area = 0
         self.debug = debug
-        self.puzzle_name = "Puzzle1"
+        self.puzzle_name = puzzle_name
 
     def set_puzzle(self, puzzleNumber):
         self.puzzle_name = "Puzzle" + puzzleNumber
@@ -53,7 +93,18 @@ class Util:
         if self.debug:
             view_image(self.board)
 
-    def get_board(self):
+    def get_cell_images(self, cellContour):
+        perimeter = cv2.arcLength(cellContour, True)
+        approx_poly = cv2.approxPolyDP(cellContour, 0.02 * perimeter, True)
+
+        pts = np.array(approx_poly.reshape(4, 2))
+        # TODO look at using a less aggressively thresholded image for this
+        cell = four_point_transform(self.board, pts)
+        cell = cv2.resize(cell, (28, 28), interpolation=cv2.INTER_AREA)
+        view_image(cell)
+        return cell
+
+    def get_contours(self):
         contours, hierarchy = cv2.findContours(image=self.board, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_NONE)
         # only look at top four contours, remove the outer most contour as it is most likely the image border
         top_contours = sorted(contours, key=cv2.contourArea, reverse=True)[1:5]
@@ -77,6 +128,13 @@ class Util:
             except:
                 pass
 
+        # perimeter = cv2.arcLength(self.cells[0], True)
+        # approx_poly = cv2.approxPolyDP(self.cells[0], 0.02 * perimeter, True)
+        #
+        # pts = np.array(approx_poly.reshape(4, 2))
+        # self.board = four_point_transform(self.board, pts)
+        # view_image(self.board)
+
         if self.debug:
             print(len(self.cells))
             img_copy_cells = self.original.copy()
@@ -86,3 +144,5 @@ class Util:
             # img_copy = cv2.putText(img_copy,"YES", (max_x, max_y), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 0, 0))
             view_image(img_copy_cells)
             view_image(img_copy_board)
+            view_image(self.board)
+        return [self.contoursBoard, self.cells]
