@@ -1,5 +1,6 @@
 from src.Util import Util
 from src.Util import view_image
+from src.DigitClassifier import DigitClassifier
 
 
 class SudokuPuzzle:
@@ -10,6 +11,8 @@ class SudokuPuzzle:
         self.util.process_image()
         [self.board_contours, self.cell_contours] = self.util.get_contours()
         self.cell_images = self.util.get_cell_images()
+
+        self.digit_classifier = DigitClassifier(False)
 
     def view_cells(self):
         for cell in self.cell_images:
