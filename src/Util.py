@@ -102,7 +102,7 @@ class Util:
 
         gray = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
         gray = cv2.GaussianBlur(gray, (5, 5), 0)
-        gray = cv2.adaptiveThreshold(gray, 255, 1, cv2.THRESH_BINARY_INV, 191, 15)
+        gray = cv2.adaptiveThreshold(gray, 255, 1, cv2.THRESH_BINARY_INV, 21, 15)
 
         for c in self.cells:
             if self.debug:
