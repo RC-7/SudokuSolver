@@ -99,6 +99,11 @@ class Util:
 
     def get_cell_images(self):
         cell_images = []
+
+        gray = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, (5, 5), 0)
+        gray = cv2.adaptiveThreshold(gray, 255, 1, cv2.THRESH_BINARY_INV, 191, 15)
+
         for c in self.cells:
             if self.debug:
                 img_copy_board = self.original.copy()
@@ -110,7 +115,7 @@ class Util:
 
             pts = np.array(approx_poly.reshape(4, 2))
             # TODO look at using a less aggressively thresholded image for this
-            cell = four_point_transform(self.board, pts)
+            cell = four_point_transform(gray, pts)
             cell = cv2.resize(cell, (28, 28), interpolation=cv2.INTER_AREA)
             cell_images.append(cell)
             if self.debug:

@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 from sklearn.preprocessing import LabelBinarizer
 import pandas as pd
@@ -8,8 +9,7 @@ class DigitClassifier:
         if training:
             self.train_model()
         else:
-            self.load_model()
-            self.model.summary()
+            self.model = tf.keras.models.load_model('../model/CNNDigitClassifier')
 
     def train_model(self):
         mnist = tf.keras.datasets.mnist
@@ -21,11 +21,11 @@ class DigitClassifier:
         x_test = x_test.reshape(list(x_test.shape) + [1])
 
         le = LabelBinarizer()
+        y_train = le.fit_transform(y_train)
+        y_test = le.transform(y_test)
 
         input_shape = (28, 28, 1)
 
-        y_train = le.fit_transform(y_train)
-        y_test = le.transform(y_test)
         model = tf.keras.models.Sequential([
             tf.keras.layers.Conv2D(32, kernel_size=5, activation='relu', input_shape=input_shape),
             tf.keras.layers.MaxPool2D(),
@@ -35,6 +35,7 @@ class DigitClassifier:
             tf.keras.layers.Dropout(0.04),
             tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(128, activation='relu'),
+            tf.keras.layers.Dense(64, activation='relu'),
             tf.keras.layers.Dropout(0.04),
             tf.keras.layers.Dense(10, activation='softmax'),
         ])
@@ -45,23 +46,26 @@ class DigitClassifier:
             metrics=['accuracy'],
         )
 
-        EPOCHS = 10
-        BATCH_SIZE = 128
+        epochs = 10
+        batch_size = 128
 
         history = model.fit(
             x_train, y_train,
             validation_data=(x_test, y_test),
-            epochs=EPOCHS,
-            batch_size=BATCH_SIZE,
+            epochs=epochs,
+            batch_size=batch_size,
             verbose=0,
         )
 
         self.save_model(model, history)
+        self.model = model
 
-    def load_model(self):
-        self.model = tf.keras.models.load_model('../model/CNNDigitClassifier')
+    def predict_digits(self, digit_image):
+        prediction = self.model.predict(digit_image)
+        return np.argmax(prediction)
 
-    def save_model(self, model, history):
+    @staticmethod
+    def save_model(model, history):
         model.save("../model/CNNDigitClassifier", save_format="h5")
 
         history_frame = pd.DataFrame(history.history)
