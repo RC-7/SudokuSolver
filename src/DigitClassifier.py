@@ -6,7 +6,7 @@ import pandas as pd
 class DigitClassifier:
     def __init__(self, training=False):
         if training:
-            self.model = self.train_model()
+            self.train_model()
         else:
             self.load_model()
             self.model.summary()
