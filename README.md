@@ -8,9 +8,7 @@ A Sudoku solver, solving and annotating images of Sudoku puzzles.
 
 ## Example input and solution from the solver:
 
-### Input
-![img](data/Images/Unsolved/Puzzle1.jpg | width=50)
+| Input | <img src="https://github.com/RC-7/SudokuSolver/blob/main/data/Images/Unsolved/Puzzle1.jpg" width="300" /> |
+| ----- | ---------------------------------------------------------------------------------------------------------|
+| Output | <img src="https://github.com/RC-7/SudokuSolver/blob/main/data/Images/Solved/Puzzle1.jpg" width="300" /> |
 
-
-### Output
-![img](data/Images/Solved/Puzzle1.jpg | width=50)
