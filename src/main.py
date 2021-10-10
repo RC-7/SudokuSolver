@@ -3,4 +3,5 @@ from src.SudokuPuzzle import SudokuPuzzle
 
 sp = SudokuPuzzle('2', False)
 
-sp.predict_puzzle()
+sp.create_board()
+print(sp.cell_objects)

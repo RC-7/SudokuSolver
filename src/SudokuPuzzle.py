@@ -2,6 +2,7 @@ import numpy as np
 from src.Util import Util
 from src.Util import view_image
 from src.DigitClassifier import DigitClassifier
+from src.Cell import Cell
 from tensorflow.keras.preprocessing.image import img_to_array
 
 
@@ -15,8 +16,9 @@ class SudokuPuzzle:
         self.cell_images = self.util.get_cell_images()
         self.digit_classifier = DigitClassifier(False)
         self.debug = debug
+        self.cell_objects = []
 
-    def predict_puzzle(self):
+    def create_board(self):
         puzzle_values = []
         for cell in self.cell_images:
             image = cell
@@ -32,6 +34,11 @@ class SudokuPuzzle:
             if self.debug:
                 view_image(image)
                 print(average_pixel)
+
+        cell_objects = []
+        for cell in puzzle_values:
+            cell_objects.append(Cell(cell))
+        self.cell_objects = cell_objects
 
     def view_cells(self):
         for cell in self.cell_images:
