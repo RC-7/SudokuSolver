@@ -101,10 +101,7 @@ class SudokuPuzzle:
                 print('No certain moves left ...')
                 print(unsolved)
             unsolved_previous = unsolved
+        self.util.annotate_board(self.cell_objects)
 
 
 
-
-    def view_cells(self):
-        for cell in self.cell_images:
-            view_image(cell)

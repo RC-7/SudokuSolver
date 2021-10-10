@@ -1,6 +1,7 @@
 import json
 import cv2
 import numpy as np
+from src.Cell import Cell
 
 
 def read_label(puzzleNumber):
@@ -172,3 +173,16 @@ class Util:
             view_image(img_copy_board)
             view_image(self.board)
         return [self.contoursBoard, self.cells]
+
+    def annotate_board(self, solved_cells):
+        for i in range(len(self.cells)):
+
+            if solved_cells[i].set_value:
+                continue
+
+            m = cv2.moments(self.cells[i])
+            cx = int(m['m10'] / m['m00'])
+            cy = int(m['m01'] / m['m00'])
+            self.original = cv2.putText(self.original, str(solved_cells[i].value), (cx, cy), cv2.FONT_HERSHEY_COMPLEX,
+                                        0.7, (255, 0, 0))
+        view_image(self.original)

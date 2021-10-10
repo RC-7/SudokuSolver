@@ -7,6 +7,7 @@ class Cell:
         self.row = row
         self.column = column
         self.block = block
+        self.set_value = cell_value != 0
 
     def set_possible_values(self, possible_values):
         if self.value != 0:
