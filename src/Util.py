@@ -67,6 +67,7 @@ class Util:
         self.board_area = 0
         self.debug = debug
         self.puzzle_name = puzzle_name
+        print(cv2.__file__)
 
     def set_puzzle(self, puzzleNumber):
         self.puzzle_name = "Puzzle" + puzzleNumber
@@ -81,8 +82,6 @@ class Util:
         filename = "../data/Images/" + self.puzzle_name + ".jpg"
         original = cv2.imread(filename)
         self.original = cv2.resize(original, (700, 960), interpolation=cv2.INTER_AREA)
-        # if self.debug:
-        #     view_image(self.original)
 
     def process_image(self):
         self.board = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
@@ -93,9 +92,25 @@ class Util:
         if self.debug:
             view_image(self.board)
 
-    # TODO
-    def order_cells(self):
-        pass
+    def order_cells(self, cell_contours, sort_method='Vertical'):
+        if sort_method == 'Vertical':
+            axis = 1
+        elif sort_method == 'Horizontal':
+            axis = 0
+        else:
+            raise "Incorrect sort_method"
+
+        bounding_rects = [cv2.boundingRect(c) for c in cell_contours]
+        (cell_contours, bounding_rects) = zip(*sorted(zip(cell_contours, bounding_rects), key=lambda b: b[1][axis]))
+        print(type(cell_contours))
+        ordered_cells = ()
+        for i in range(9):
+            start_index = i*9
+            slice1 = cell_contours[start_index: start_index + 9]
+            slice2 = bounding_rects[start_index: start_index + 9]
+            (test, _) = zip(*sorted(zip(slice1, slice2), key=lambda b: b[1][0]))
+            ordered_cells = ordered_cells + test
+        self.cells = ordered_cells
 
     def get_cell_images(self):
         cell_images = []
@@ -145,6 +160,7 @@ class Util:
                         self.cells.append(contour)
             except:
                 pass
+        self.order_cells(self.cells)
 
         if self.debug:
             print(len(self.cells))
