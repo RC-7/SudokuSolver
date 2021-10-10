@@ -176,13 +176,11 @@ class Util:
 
     def annotate_board(self, solved_cells):
         for i in range(len(self.cells)):
-
             if solved_cells[i].set_value:
                 continue
-
             m = cv2.moments(self.cells[i])
-            cx = int(m['m10'] / m['m00'])
-            cy = int(m['m01'] / m['m00'])
-            self.original = cv2.putText(self.original, str(solved_cells[i].value), (cx, cy), cv2.FONT_HERSHEY_COMPLEX,
-                                        0.7, (255, 0, 0))
+            cx = int(m['m10'] / m['m00']) - 10
+            cy = int(m['m01'] / m['m00']) + 10
+            self.original = cv2.putText(self.original, str(solved_cells[i].value), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX,
+                                        0.7, (255, 0, 0), 2, cv2.LINE_AA)
         view_image(self.original)
