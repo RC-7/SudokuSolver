@@ -102,7 +102,6 @@ class Util:
 
         bounding_rects = [cv2.boundingRect(c) for c in cell_contours]
         (cell_contours, bounding_rects) = zip(*sorted(zip(cell_contours, bounding_rects), key=lambda b: b[1][axis]))
-        print(type(cell_contours))
         ordered_cells = ()
         for i in range(9):
             start_index = i*9
