@@ -14,7 +14,6 @@ def read_label(puzzleNumber):
 def view_image(image):
     cv2.imshow("Image", image)
     cv2.waitKey(0)
-    # cv2.destroyAllWindows()
 
 
 def order_points(pts):
@@ -80,7 +79,7 @@ class Util:
         self.labels = labels
 
     def read_image(self):
-        filename = "../data/Images/" + self.puzzle_name + ".jpg"
+        filename = "../data/Images/Unsolved/" + self.puzzle_name + ".jpg"
         original = cv2.imread(filename)
         self.original = cv2.resize(original, (700, 960), interpolation=cv2.INTER_AREA)
 
@@ -168,7 +167,6 @@ class Util:
             img_copy_board = self.original.copy()
             img_copy_cells = cv2.drawContours(img_copy_cells, self.cells, -1, (255, 255, 0), 3)
             img_copy_board = cv2.drawContours(img_copy_board, self.contoursBoard, -1, (255, 255, 0), 3)
-            # img_copy = cv2.putText(img_copy,"YES", (max_x, max_y), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 0, 0))
             view_image(img_copy_cells)
             view_image(img_copy_board)
             view_image(self.board)
@@ -183,4 +181,6 @@ class Util:
             cy = int(m['m01'] / m['m00']) + 10
             self.original = cv2.putText(self.original, str(solved_cells[i].value), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX,
                                         0.7, (255, 0, 0), 2, cv2.LINE_AA)
+            filename = "../data/Images/Solved/" + self.puzzle_name + ".jpg"
+            cv2.imwrite(filename, self.original)
         view_image(self.original)

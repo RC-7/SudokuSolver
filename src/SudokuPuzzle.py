@@ -79,7 +79,6 @@ class SudokuPuzzle:
     def fill_in_certainties(self):
         unsolved_cells = 0
         for i in range(len(self.cell_objects)):
-            # print(self.cell_objects[i].possible_values)
             if len(self.cell_objects[i].possible_values) == 1:
                 self.cell_objects[i].value = self.cell_objects[i].possible_values[0]
                 self.cell_objects[i].possible_values = []
