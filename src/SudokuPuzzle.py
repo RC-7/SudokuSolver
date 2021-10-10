@@ -56,21 +56,52 @@ class SudokuPuzzle:
                 cell_column += 1
         self.cell_objects = cell_objects
 
-    def get_block_values(self, index):
-        pass
-
-    def get_row_values(self, row_index):
-        pass
-
-
     def get_possible_value(self):
         for cell in self.cell_objects:
             # x + y*3
             if cell.value != 0:
                 continue
             possible_values = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-            index = self.cell_objects.index(cell)
-            block = index % 9
+            for cell_compare in self.cell_objects:
+                if cell == cell_compare or cell_compare.value == 0:
+                    continue
+                if cell.row == cell_compare.row or cell.column == cell_compare.column\
+                        or cell.block == cell_compare.block:
+                    try:
+                        possible_values.remove(cell_compare.value)
+                    except:
+                        pass
+                    if len(possible_values) == 0:
+                        return False
+            cell.possible_values = possible_values
+        return True
+
+    def fill_in_certainties(self):
+        unsolved_cells = 0
+        for i in range(len(self.cell_objects)):
+            # print(self.cell_objects[i].possible_values)
+            if len(self.cell_objects[i].possible_values) == 1:
+                self.cell_objects[i].value = self.cell_objects[i].possible_values[0]
+                self.cell_objects[i].possible_values = []
+                continue
+            if len(self.cell_objects[i].possible_values) > 0:
+                unsolved_cells += 1
+        return unsolved_cells
+
+    def solve_puzzle(self):
+        valid_board = self.get_possible_value()
+        if not valid_board:
+            raise "Invalid board, there is a cell without a valid solution"
+        unsolved = self.fill_in_certainties()
+        unsolved_previous = 0
+        while unsolved != 0 and valid_board:
+            valid_board = self.get_possible_value()
+            unsolved = self.fill_in_certainties()
+            if unsolved == unsolved_previous:
+                print('No certain moves left ...')
+                print(unsolved)
+            unsolved_previous = unsolved
+
 
 
 
