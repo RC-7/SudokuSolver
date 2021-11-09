@@ -67,10 +67,15 @@ class Util:
         self.board_area = 0
         self.debug = debug
         self.puzzle_name = puzzle_name
+        self.puzzle_path = ''
         print(cv2.__file__)
 
-    def set_puzzle(self, puzzleNumber):
-        self.puzzle_name = "Puzzle" + puzzleNumber
+    def set_puzzle(self, puzzle):
+        if "C:" in puzzle:
+            self.puzzle_name = puzzle.split('\\')[-1]
+            self.puzzle_path = puzzle
+        else:
+            self.puzzle_name = "Puzzle" + puzzle
 
     def read_label(self):
         filename = "../data/Labels/" + self.puzzle_name + ".json"
@@ -79,8 +84,9 @@ class Util:
         self.labels = labels
 
     def read_image(self):
-        filename = "../data/Images/Unsolved/" + self.puzzle_name + ".jpg"
-        original = cv2.imread(filename)
+        if self.puzzle_path == '':
+            self.puzzle_path = "../data/Images/Unsolved/" + self.puzzle_name + ".jpg"
+        original = cv2.imread(self.puzzle_path)
         self.original = cv2.resize(original, (700, 960), interpolation=cv2.INTER_AREA)
 
     def process_image(self):
@@ -172,8 +178,9 @@ class Util:
             view_image(self.board)
         return [self.contoursBoard, self.cells]
 
-    def annotate_board(self, solved_cells, save_image=False):
+    def annotate_board(self, solved_cells, solutions_to_display=-1, save_image=False):
         local_copy = self.original.copy()
+        solutions_added = 0
         for i in range(len(self.cells)):
             if solved_cells[i].set_value:
                 continue
@@ -183,8 +190,14 @@ class Util:
             cx = int(m['m10'] / m['m00']) - 10
             cy = int(m['m01'] / m['m00']) + 10
             local_copy = cv2.putText(local_copy, str(solved_cells[i].value), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX,
-                                     0.7, (255, 0, 0), 2, cv2.LINE_AA)
-            filename = "../data/Images/Solved/" + self.puzzle_name + ".jpg"
-            if save_image:
-                cv2.imwrite(filename, local_copy)
-        view_image(local_copy)
+                                     0.7, (255, 0, 255), 2, cv2.LINE_AA)
+            if solutions_to_display == -1:
+                continue
+            else:
+                solutions_added += 1
+                if solutions_added == solutions_to_display:
+                    break
+        filename = "../data/Images/Solved/" + self.puzzle_name + ".jpg"
+        if save_image:
+            cv2.imwrite(filename, local_copy)
+        return local_copy

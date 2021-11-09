@@ -232,7 +232,10 @@ class SudokuPuzzle:
                 if solved:
                     break
             unsolved_previous = unsolved
-        self.util.annotate_board(self.cell_objects, True)
+        return
+
+    def view_puzzle(self, solutions_to_display):
+        return self.util.annotate_board(self.cell_objects, solutions_to_display, True)
 
 
 

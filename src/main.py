@@ -1,10 +1,11 @@
-from src.SudokuPuzzle import SudokuPuzzle
+from src.GUI import GUI
+from tkinter import Tk
 
 
 def main():
-    sp = SudokuPuzzle('200', False)
-    sp.create_board()
-    sp.solve_puzzle()
+    root = Tk()
+    gui = GUI(root)
+    root.mainloop()
 
 
 if __name__ == "__main__":
