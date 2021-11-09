@@ -77,13 +77,14 @@ class SudokuPuzzle:
                     except:
                         pass
                     if len(possible_values) == 0:
+                        print('No valid moves for cell')
                         return False
             cell.possible_values = possible_values
         return True
 
     def check_board(self):
         for cell in self.cell_objects:
-            if cell.value != 0:
+            if cell.value == 0:
                 continue
             for cell_compare in self.cell_objects:
                 if cell == cell_compare or cell_compare.value == 0:
@@ -91,11 +92,12 @@ class SudokuPuzzle:
                 if cell.row == cell_compare.row or cell.column == cell_compare.column\
                         or cell.block == cell_compare.block:
                     if cell.value == cell_compare.value:
-                        print('Oh no')
+                        print('Oh no bad board')
                         return False
         return True
 
     def check_cells(self):
+        self.get_possible_value()
         for cell in self.cell_objects:
             if cell.value != 0:
                 continue
@@ -112,7 +114,7 @@ class SudokuPuzzle:
                     # print('---------------')
                     if len(cell.possible_values) == 1 and len(cell_compare.possible_values) == 1:
                         if cell.possible_values[0] == cell_compare.possible_values[0]:
-                            print('Oh no')
+                            print('Oh no no valid cell moves')
                             return False
         return True
 
@@ -156,6 +158,8 @@ class SudokuPuzzle:
                     # print('index inside' + str(index_to_guess))
                     lowest_uncertainty = uncertainty
             # print('index' + str(index_to_guess))
+        print(index_to_guess)
+        print(self.cell_objects[index_to_guess].possible_values)
         self.cell_objects[index_to_guess].value = self.cell_objects[index_to_guess].possible_values[0]
         self.cell_objects[index_to_guess].guessing = True
         # remove possible value
@@ -177,19 +181,20 @@ class SudokuPuzzle:
         # guess_number += 1
         # Need to update the possible values with the value ...
         # self.get_possible_value()
-        if new_guess_number >= len(self.cell_objects[index].possible_values):
+        if new_guess_number >= len(self.guesses[len(self.guesses) - 1][1]):
             self.guesses[len(self.guesses) - 1][2] += 1
             return False
         print('here.....' + str(self.guesses[len(self.guesses) - 1][1]))
         print('here GN.....' + str(new_guess_number))
+        print('here GI.....' + str(index))
         new_guess = self.guesses[len(self.guesses) - 1][1][new_guess_number]
         self.guesses[len(self.guesses) - 1][2] = new_guess_number
         self.cell_objects[index].value = new_guess
         # self.guesses[len(self.guesses) - 1][1] = self.cell_objects[index].value
         valid_board = self.get_possible_value() and self.check_board() and self.check_cells()
-        print(valid_board)
+        print('checking if board is valid' + str(valid_board))
+        print(self.guesses)
         return valid_board
-
 
     # Sometimes get's in a weird loop when the base guess or one of them is wrong when backtracking, but then works fine other times, commit a version and look at the recursion
     def solve_pencil(self):
@@ -230,6 +235,7 @@ class SudokuPuzzle:
                             # print(solved_index)
                             self.cell_objects[solved_index].value = 0
                     print('clearing')
+                    self.get_possible_value()
                     # self.util.annotate_board(self.cell_objects)
                     solved_for_guess = []
 
@@ -242,14 +248,19 @@ class SudokuPuzzle:
                     if self.guesses[len(self.guesses) - 1][2] >= len(self.guesses[len(self.guesses) - 1][1]):
                         self.cell_objects[self.guesses[len(self.guesses) - 1][0]].value = 0
                         self.cell_objects[self.guesses[len(self.guesses) - 1][0]].guessing = False
+                        print('ending one level of recursion invalid board')
+                        print(valid_board)
+                        # print(self.guesses[len(self.guesses) - 1][2])
+                        # print(self.guesses[len(self.guesses) - 1][1][self.guesses[len(self.guesses) - 1][2]])
                         self.guesses.pop()
-                        print('ending one level of recursion')
+                        self.get_possible_value()
                         # self.util.annotate_board(self.cell_objects)
                         return False
             # self.util.annotate_board(self.cell_objects)
+            self.get_possible_value()
             [unsolved, solved_indexes] = self.fill_in_certainties(True)
             # self.util.annotate_board(self.cell_objects)
-            if len(solved_indexes) > 1:
+            if len(solved_indexes) >= 1:
                 solved_for_guess.append(solved_indexes)
             print('Solved for guesses')
             print(solved_for_guess)
@@ -262,10 +273,19 @@ class SudokuPuzzle:
                 print('inside recursion')
                 # self.util.annotate_board(self.cell_objects)
                 # print(self.guesses)
+                self.get_possible_value()
                 solved = self.solve_pencil()
                 print(self.guesses)
                 print(solved)
                 if not solved:
+                    for solved in solved_for_guess:
+                        for solved_index in solved:
+                            # print(solved_index)
+                            self.cell_objects[solved_index].value = 0
+                    print('clearing main thread')
+                    # Issue is definately in how clean up when recursion
+                    # self.util.annotate_board(self.cell_objects)
+                    solved_for_guess = []
                     self.iterate_guess()
                     index = self.guesses[len(self.guesses) - 1][0]
                     # if self.guesses[len(self.guesses) - 1][2] >= len(self.cell_objects[index].possible_values):
@@ -273,11 +293,14 @@ class SudokuPuzzle:
                         self.cell_objects[self.guesses[len(self.guesses) - 1][0]].value = 0
                         self.cell_objects[self.guesses[len(self.guesses) - 1][0]].guessing = False
                         self.guesses.pop()
-                        print('ending one level of recursion')
+                        print('ending one level of recursion valid board')
                         # self.util.annotate_board(self.cell_objects)
                         return False
                     unsolved_previous = 100
                     print('Iterating base guess')
+                if solved and unsolved == 0:
+                    print('solved true' + str(unsolved))
+                    return True
             else:
                 unsolved_previous = unsolved
         self.guesses.pop()
@@ -302,6 +325,9 @@ class SudokuPuzzle:
             if unsolved == unsolved_previous:
                 print('No certain moves left ...')
                 print(unsolved)
+                # if unsolved == 0:
+                #     self.util.annotate_board(self.cell_objects)
+                #     break
                 print('in solve puzzle')
                 solved = self.solve_pencil()
                 print(solved)
