@@ -75,7 +75,6 @@ class SudokuPuzzle:
                     except:
                         pass
                     if len(possible_values) == 0:
-                        print('No valid moves for cell')
                         return False
             cell.possible_values = possible_values
         return True
@@ -157,7 +156,7 @@ class SudokuPuzzle:
         valid_board = self.get_possible_value() and self.check_board() and self.check_cells()
         return valid_board
 
-    def clear_solutions_for_incorrect_guess(self, indices):
+    def erase_solutions_from_guess(self, indices):
         for solved in indices:
             for solved_index in solved:
                 self.cell_objects[solved_index].value = 0
@@ -165,7 +164,7 @@ class SudokuPuzzle:
         return []
 
     # Checks if cleanup is needed and cleans last guess made
-    def clean_up_guess(self):
+    def erase_guess(self):
         index = len(self.guesses) - 1
         if self.guesses[index][2] >= len(self.guesses[len(self.guesses) - 1][1]):
             self.cell_objects[self.guesses[index][0]].value = 0
@@ -176,7 +175,7 @@ class SudokuPuzzle:
         else:
             return False
 
-    def solve_pencil(self):
+    def solve_with_pencil(self):
         solved_for_guess = []
         guess_information = self.guess_value()
         self.guesses.append(guess_information)
@@ -188,9 +187,9 @@ class SudokuPuzzle:
             valid_board = valid_board and self.check_board() and self.check_cells()
             if not valid_board:
                 while not valid_board:
-                    solved_for_guess = self.clear_solutions_for_incorrect_guess(solved_for_guess)
+                    solved_for_guess = self.erase_solutions_from_guess(solved_for_guess)
                     valid_board = self.iterate_guess()
-                    if self.clean_up_guess():
+                    if self.erase_guess():
                         return False
             self.get_possible_value()
             [unsolved, solved_indexes] = self.fill_in_certainties(True)
@@ -198,14 +197,11 @@ class SudokuPuzzle:
                 solved_for_guess.append(solved_indexes)
             if unsolved == unsolved_previous:
                 self.get_possible_value()
-                solved = self.solve_pencil()
+                solved = self.solve_with_pencil()
                 if not solved:
-                    for solved in solved_for_guess:
-                        for solved_index in solved:
-                            self.cell_objects[solved_index].value = 0
-                    solved_for_guess = []
+                    solved_for_guess = self.erase_solutions_from_guess(solved_for_guess)
                     self.iterate_guess()
-                    if self.clean_up_guess():
+                    if self.erase_guess():
                         return False
                     unsolved_previous = 100
                 if solved and unsolved == 0:
@@ -232,7 +228,7 @@ class SudokuPuzzle:
             valid_board = self.get_possible_value()
             unsolved = self.fill_in_certainties()
             if unsolved == unsolved_previous:
-                solved = self.solve_pencil()
+                solved = self.solve_with_pencil()
                 if solved:
                     break
             unsolved_previous = unsolved
