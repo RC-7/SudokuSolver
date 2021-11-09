@@ -2,7 +2,7 @@ from src.SudokuPuzzle import SudokuPuzzle
 
 
 def main():
-    sp = SudokuPuzzle('53', False)
+    sp = SudokuPuzzle('200', False)
     sp.create_board()
     sp.solve_puzzle()
 
