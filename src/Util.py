@@ -172,15 +172,19 @@ class Util:
             view_image(self.board)
         return [self.contoursBoard, self.cells]
 
-    def annotate_board(self, solved_cells):
+    def annotate_board(self, solved_cells, save_image = False):
+        local_copy = self.original.copy()
         for i in range(len(self.cells)):
             if solved_cells[i].set_value:
+                continue
+            if solved_cells[i].value == 0:
                 continue
             m = cv2.moments(self.cells[i])
             cx = int(m['m10'] / m['m00']) - 10
             cy = int(m['m01'] / m['m00']) + 10
-            self.original = cv2.putText(self.original, str(solved_cells[i].value), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX,
-                                        0.7, (255, 0, 0), 2, cv2.LINE_AA)
+            local_copy = cv2.putText(local_copy, str(solved_cells[i].value), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX,
+                                     0.7, (255, 0, 0), 2, cv2.LINE_AA)
             filename = "../data/Images/Solved/" + self.puzzle_name + ".jpg"
-            cv2.imwrite(filename, self.original)
-        view_image(self.original)
+            if save_image:
+                cv2.imwrite(filename, local_copy)
+        view_image(local_copy)
