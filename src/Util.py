@@ -172,7 +172,7 @@ class Util:
             view_image(self.board)
         return [self.contoursBoard, self.cells]
 
-    def annotate_board(self, solved_cells, save_image = False):
+    def annotate_board(self, solved_cells, save_image=False):
         local_copy = self.original.copy()
         for i in range(len(self.cells)):
             if solved_cells[i].set_value:

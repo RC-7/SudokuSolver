@@ -1,4 +1,3 @@
-import itertools
 import random
 
 import numpy as np
@@ -7,7 +6,6 @@ from src.Util import view_image
 from src.DigitClassifier import DigitClassifier
 from src.Cell import Cell
 from tensorflow.keras.preprocessing.image import img_to_array
-from itertools import chain, combinations
 
 
 class SudokuPuzzle:
@@ -92,7 +90,6 @@ class SudokuPuzzle:
                 if cell.row == cell_compare.row or cell.column == cell_compare.column\
                         or cell.block == cell_compare.block:
                     if cell.value == cell_compare.value:
-                        print('Oh no bad board')
                         return False
         return True
 
@@ -108,20 +105,14 @@ class SudokuPuzzle:
                     continue
                 if cell.row == cell_compare.row or cell.column == cell_compare.column\
                         or cell.block == cell_compare.block:
-                    # print('---------------')
-                    # print(cell.possible_values)
-                    # print(cell_compare.possible_values)
-                    # print('---------------')
                     if len(cell.possible_values) == 1 and len(cell_compare.possible_values) == 1:
                         if cell.possible_values[0] == cell_compare.possible_values[0]:
-                            print('Oh no no valid cell moves')
                             return False
         return True
 
     def fill_in_certainties(self, pencil=False):
         unsolved_cells = 0
         solved_indexes = []
-        # Need to account for multiple in same row/column!
         for i in range(len(self.cell_objects)):
             if len(self.cell_objects[i].possible_values) == 1:
                 self.cell_objects[i].value = self.cell_objects[i].possible_values[0]
@@ -136,170 +127,88 @@ class SudokuPuzzle:
         return unsolved_cells
 
     def guess_value(self):
-        # lowest_uncertainty = 2
         index_to_guess = 0
         lowest_uncertainty = 9
-        # valid_board = self.get_possible_value()
         indices = list(range(len(self.cell_objects)))
         random.shuffle(indices)
         for i in indices:
             uncertainty = len(self.cell_objects[i].possible_values)
-            # print('index inside ' + str(i))
-            # print('index inside ' + str(self.cell_objects[i].guessing))
-            # print('index inside ' + str(self.cell_objects[i].value))
-            # print('index inside ' + str(uncertainty))
             if not self.cell_objects[i].guessing and self.cell_objects[i].value == 0 and uncertainty > 1:
                 if uncertainty == 2:
                     index_to_guess = i
-                    # print('index inside' + str(index_to_guess))
                     break
                 if uncertainty < lowest_uncertainty:
                     index_to_guess = i
-                    # print('index inside' + str(index_to_guess))
                     lowest_uncertainty = uncertainty
-            # print('index' + str(index_to_guess))
-        print(index_to_guess)
-        print(self.cell_objects[index_to_guess].possible_values)
         self.cell_objects[index_to_guess].value = self.cell_objects[index_to_guess].possible_values[0]
         self.cell_objects[index_to_guess].guessing = True
-        # remove possible value
         return [index_to_guess, self.cell_objects[index_to_guess].possible_values, 0]
-        # return False
 
     def iterate_guess(self):
-        print('guesses iterate')
         self.get_possible_value()
-        print(self.guesses)
         index = self.guesses[len(self.guesses) - 1][0]
         new_guess_number = self.guesses[len(self.guesses) - 1][2] + 1
-        print('iterating')
-        # print(self.guesses)
-        # print(self.guesses[len(self.guesses) - 1])
-        # print(self.cell_objects[index].possible_values)
-        # print(len(self.cell_objects[index].possible_values))
-        # self.guesses[len(self.guesses) - 1][2] += 1
-        # guess_number += 1
-        # Need to update the possible values with the value ...
-        # self.get_possible_value()
         if new_guess_number >= len(self.guesses[len(self.guesses) - 1][1]):
             self.guesses[len(self.guesses) - 1][2] += 1
             return False
-        print('here.....' + str(self.guesses[len(self.guesses) - 1][1]))
-        print('here GN.....' + str(new_guess_number))
-        print('here GI.....' + str(index))
         new_guess = self.guesses[len(self.guesses) - 1][1][new_guess_number]
         self.guesses[len(self.guesses) - 1][2] = new_guess_number
         self.cell_objects[index].value = new_guess
-        # self.guesses[len(self.guesses) - 1][1] = self.cell_objects[index].value
         valid_board = self.get_possible_value() and self.check_board() and self.check_cells()
-        print('checking if board is valid' + str(valid_board))
-        print(self.guesses)
         return valid_board
 
-    # Sometimes get's in a weird loop when the base guess or one of them is wrong when backtracking, but then works fine other times, commit a version and look at the recursion
-    def solve_pencil(self):
-        print('beginning solve')
-        solved_for_guess = []
-        return_value = self.guess_value()
-        # while not return_value:
-        #     lowest_uncertainty += 1
-        #     return_value = self.guess_value(lowest_uncertainty)
-        self.guesses.append(return_value)
-        print('guesses entry')
-        print(self.guesses)
+    def clear_solutions_for_incorrect_guess(self, indices):
+        for solved in indices:
+            for solved_index in solved:
+                self.cell_objects[solved_index].value = 0
+        self.get_possible_value()
+        return []
 
+    # Checks if cleanup is needed and cleans last guess made
+    def clean_up_guess(self):
+        index = len(self.guesses) - 1
+        if self.guesses[index][2] >= len(self.guesses[len(self.guesses) - 1][1]):
+            self.cell_objects[self.guesses[index][0]].value = 0
+            self.cell_objects[self.guesses[index][0]].guessing = False
+            self.guesses.pop()
+            self.get_possible_value()
+            return True
+        else:
+            return False
+
+    def solve_pencil(self):
+        solved_for_guess = []
+        guess_information = self.guess_value()
+        self.guesses.append(guess_information)
         unsolved_previous = 0
-        # valid_board = self.get_possible_value()
-        # [unsolved, solved_indexes] = self.fill_in_certainties(True)
-        # self.util.annotate_board(self.cell_objects)
         unsolved = 50
-        # if len(solved_indexes) > 0:
-        #     # print("solved" + str(solved_indexes))
-        #     solved_for_guess.append(solved_indexes)
-        # solved_for_guess.append(solved_indexes)
+
         while unsolved != 0:
-            # self.util.annotate_board(self.cell_objects)
             valid_board = self.get_possible_value()
-            print('here inside unsolved')
-            test = self.check_cells()
-            valid_board = valid_board and self.check_board() and test
-            print('valid_board')
-            print(valid_board)
+            valid_board = valid_board and self.check_board() and self.check_cells()
             if not valid_board:
                 while not valid_board:
-                    # self.util.annotate_board(self.cell_objects)
-                    print('inside not valid')
-                    # self.util.annotate_board(self.cell_objects)
-                    for solved in solved_for_guess:
-                        for solved_index in solved:
-                            # print(solved_index)
-                            self.cell_objects[solved_index].value = 0
-                    print('clearing')
-                    self.get_possible_value()
-                    # self.util.annotate_board(self.cell_objects)
-                    solved_for_guess = []
-
+                    solved_for_guess = self.clear_solutions_for_incorrect_guess(solved_for_guess)
                     valid_board = self.iterate_guess()
-                    # self.util.annotate_board(self.cell_objects)
-                    # self.cell_objects[self.guesses[len(self.guesses) - 1][0]].value = 0
-                    # self.util.annotate_board(self.cell_objects)
-                    index = self.guesses[len(self.guesses) - 1][0]
-                    # if self.guesses[len(self.guesses) - 1][2] >= len(self.cell_objects[index].possible_values):
-                    if self.guesses[len(self.guesses) - 1][2] >= len(self.guesses[len(self.guesses) - 1][1]):
-                        self.cell_objects[self.guesses[len(self.guesses) - 1][0]].value = 0
-                        self.cell_objects[self.guesses[len(self.guesses) - 1][0]].guessing = False
-                        print('ending one level of recursion invalid board')
-                        print(valid_board)
-                        # print(self.guesses[len(self.guesses) - 1][2])
-                        # print(self.guesses[len(self.guesses) - 1][1][self.guesses[len(self.guesses) - 1][2]])
-                        self.guesses.pop()
-                        self.get_possible_value()
-                        # self.util.annotate_board(self.cell_objects)
+                    if self.clean_up_guess():
                         return False
-            # self.util.annotate_board(self.cell_objects)
             self.get_possible_value()
             [unsolved, solved_indexes] = self.fill_in_certainties(True)
-            # self.util.annotate_board(self.cell_objects)
             if len(solved_indexes) >= 1:
                 solved_for_guess.append(solved_indexes)
-            print('Solved for guesses')
-            print(solved_for_guess)
-            print(unsolved)
             if unsolved == unsolved_previous:
-                print('No certain moves left ...')
-                print(unsolved)
-                print(self.guesses)
-                print(solved_for_guess)
-                print('inside recursion')
-                # self.util.annotate_board(self.cell_objects)
-                # print(self.guesses)
                 self.get_possible_value()
                 solved = self.solve_pencil()
-                print(self.guesses)
-                print(solved)
                 if not solved:
                     for solved in solved_for_guess:
                         for solved_index in solved:
-                            # print(solved_index)
                             self.cell_objects[solved_index].value = 0
-                    print('clearing main thread')
-                    # Issue is definately in how clean up when recursion
-                    # self.util.annotate_board(self.cell_objects)
                     solved_for_guess = []
                     self.iterate_guess()
-                    index = self.guesses[len(self.guesses) - 1][0]
-                    # if self.guesses[len(self.guesses) - 1][2] >= len(self.cell_objects[index].possible_values):
-                    if self.guesses[len(self.guesses) - 1][2] >= len(self.guesses[len(self.guesses) - 1][1]):
-                        self.cell_objects[self.guesses[len(self.guesses) - 1][0]].value = 0
-                        self.cell_objects[self.guesses[len(self.guesses) - 1][0]].guessing = False
-                        self.guesses.pop()
-                        print('ending one level of recursion valid board')
-                        # self.util.annotate_board(self.cell_objects)
+                    if self.clean_up_guess():
                         return False
                     unsolved_previous = 100
-                    print('Iterating base guess')
                 if solved and unsolved == 0:
-                    print('solved true' + str(unsolved))
                     return True
             else:
                 unsolved_previous = unsolved
@@ -323,22 +232,10 @@ class SudokuPuzzle:
             valid_board = self.get_possible_value()
             unsolved = self.fill_in_certainties()
             if unsolved == unsolved_previous:
-                print('No certain moves left ...')
-                print(unsolved)
-                # if unsolved == 0:
-                #     self.util.annotate_board(self.cell_objects)
-                #     break
-                print('in solve puzzle')
                 solved = self.solve_pencil()
-                print(solved)
                 if solved:
-                    # for cell in self.cell_objects:
-                    #     cell.value = cell.pencil_value
-                    # self.util.annotate_board(self.cell_objects)
-                    # self.util.annotate_board(self.cell_objects)
                     break
             unsolved_previous = unsolved
-        print('here')
         self.util.annotate_board(self.cell_objects, True)
 
 
