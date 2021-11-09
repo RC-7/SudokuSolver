@@ -16,7 +16,7 @@ A Sudoku solver, solving and annotating images of Sudoku puzzles.
 
 ## Basic Gui Added:
 
-<img src="https://github.com/RC-7/SudokuSolver/blob/main/data/Images/GUI/GUI_Select.png" width="300" />
+<img src="https://github.com/RC-7/SudokuSolver/blob/main/data/Images/GUI/GUI_Base.png" width="300" />
 <br>
 <img src="https://github.com/RC-7/SudokuSolver/blob/main/data/Images/GUI/GUI_Hint.png" width="300" />
 <br>
